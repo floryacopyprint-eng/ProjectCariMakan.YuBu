@@ -173,6 +173,7 @@ const getUsers = (req, res) => {
       u.role_id, 
       r.nama_role,
       u.is_active, 
+      u.foto_profil,
       u.created_at 
     FROM users u
     LEFT JOIN roles r ON u.role_id = r.role_id
@@ -191,6 +192,63 @@ const getUsers = (req, res) => {
     return res.status(200).json({
       success: true,
       data: results
+    });
+  });
+};
+
+// PUT update profile user (admin only)
+const updateUserProfile = (req, res) => {
+  const userId = req.params.id;
+  const { nama, username, email, foto_profil } = req.body;
+
+  if (!nama || !username || !email) {
+    return res.status(400).json({
+      success: false,
+      message: 'Nama, username, dan email wajib diisi'
+    });
+  }
+
+  const normalizedUsername = String(username).trim();
+  const normalizedEmail = String(email).trim().toLowerCase();
+
+  const checkQuery = 'SELECT user_id FROM users WHERE (username = ? OR email = ?) AND user_id != ?';
+  db.query(checkQuery, [normalizedUsername, normalizedEmail, userId], (checkErr, existingUsers) => {
+    if (checkErr) {
+      return res.status(500).json({
+        success: false,
+        message: 'Error validating profile data',
+        error: checkErr.message
+      });
+    }
+
+    if (existingUsers && existingUsers.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: 'Username atau email sudah digunakan oleh user lain'
+      });
+    }
+
+    const updateQuery = 'UPDATE users SET nama = ?, username = ?, email = ?, foto_profil = ? WHERE user_id = ?';
+    db.query(updateQuery, [String(nama).trim(), normalizedUsername, normalizedEmail, foto_profil || null, userId], (err, result) => {
+      if (err) {
+        return res.status(500).json({
+          success: false,
+          message: 'Error updating user profile',
+          error: err.message
+        });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found'
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'User profile updated successfully'
+      });
     });
   });
 };
@@ -319,6 +377,42 @@ const getOrders = (req, res) => {
   });
 };
 
+// PUT update status order
+const updateOrderStatus = (req, res) => {
+  const orderId = req.params.id;
+  const { status } = req.body;
+
+  const validStatuses = ['pending', 'diproses', 'dikirim', 'selesai', 'dibatalkan'];
+  if (!status || !validStatuses.includes(status)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Status tidak valid'
+    });
+  }
+
+  db.query('UPDATE orders SET status = ? WHERE order_id = ?', [status, orderId], (err, result) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        message: 'Error updating order status',
+        error: err.message
+      });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Order status updated successfully'
+    });
+  });
+};
+
 // =====================
 // DASHBOARD STATISTICS
 // =====================
@@ -395,10 +489,12 @@ module.exports = {
   deleteFood,
   // Users
   getUsers,
+  updateUserProfile,
   updateUserStatus,
   updateUserRole,
   // Orders
   getOrders,
+  updateOrderStatus,
   // Dashboard
   getDashboard
 };

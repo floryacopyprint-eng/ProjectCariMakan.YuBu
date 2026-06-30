@@ -4,7 +4,17 @@ const { formatFavorites } = require('../config/responseFormatter');
 // GET /api/favorites/:userId - Get favorites by user
 exports.getFavoritesByUser = (req, res) => {
   try {
+    const authenticatedUserId = req.user?.user_id;
     const { userId } = req.params;
+
+    if (!authenticatedUserId) {
+      return res.status(401).json({ success: false, message: 'Token tidak ditemukan' });
+    }
+
+    if (String(userId) !== String(authenticatedUserId)) {
+      return res.status(403).json({ success: false, message: 'Akses ditolak' });
+    }
+
     const query = `
       SELECT f.*, c.nama_kategori as category_name 
       FROM favorites fav
@@ -13,9 +23,10 @@ exports.getFavoritesByUser = (req, res) => {
       WHERE fav.user_id = ?
       ORDER BY fav.created_at DESC
     `;
-    db.query(query, [userId], (err, result) => {
+    db.query(query, [authenticatedUserId], (err, result) => {
       if (err) {
-        return res.status(500).json({ error: 'Database error', message: err.message });
+        console.error('Favorites query failed:', err.message);
+        return res.status(500).json({ error: 'Database error', message: 'Unable to load favorites right now. Please verify MySQL access.' });
       }
       res.json({
         success: true,
@@ -31,15 +42,25 @@ exports.getFavoritesByUser = (req, res) => {
 // POST /api/favorites - Add to favorites
 exports.addFavorite = (req, res) => {
   try {
+    const authenticatedUserId = req.user?.user_id;
     const { user_id, food_id } = req.body;
 
-    if (!user_id || !food_id) {
+    if (!authenticatedUserId) {
+      return res.status(401).json({ success: false, message: 'Token tidak ditemukan' });
+    }
+
+    if (!food_id) {
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const targetUserId = user_id || authenticatedUserId;
+    if (String(targetUserId) !== String(authenticatedUserId)) {
+      return res.status(403).json({ success: false, message: 'Akses ditolak' });
     }
 
     // Check if already favorited
     const checkQuery = 'SELECT * FROM favorites WHERE user_id = ? AND food_id = ?';
-    db.query(checkQuery, [user_id, food_id], (checkErr, checkResult) => {
+    db.query(checkQuery, [authenticatedUserId, food_id], (checkErr, checkResult) => {
       if (checkErr) {
         return res.status(500).json({ error: 'Database error', message: checkErr.message });
       }
@@ -49,7 +70,7 @@ exports.addFavorite = (req, res) => {
       }
 
       const query = 'INSERT INTO favorites (user_id, food_id, created_at) VALUES (?, ?, NOW())';
-      db.query(query, [user_id, food_id], (err, result) => {
+      db.query(query, [authenticatedUserId, food_id], (err, result) => {
         if (err) {
           return res.status(500).json({ error: 'Database error', message: err.message });
         }
@@ -68,9 +89,19 @@ exports.addFavorite = (req, res) => {
 // DELETE /api/favorites/:userId/:foodId - Remove from favorites
 exports.removeFavorite = (req, res) => {
   try {
+    const authenticatedUserId = req.user?.user_id;
     const { userId, foodId } = req.params;
+
+    if (!authenticatedUserId) {
+      return res.status(401).json({ success: false, message: 'Token tidak ditemukan' });
+    }
+
+    if (String(userId) !== String(authenticatedUserId)) {
+      return res.status(403).json({ success: false, message: 'Akses ditolak' });
+    }
+
     const query = 'DELETE FROM favorites WHERE user_id = ? AND food_id = ?';
-    db.query(query, [userId, foodId], (err, result) => {
+    db.query(query, [authenticatedUserId, foodId], (err, result) => {
       if (err) {
         return res.status(500).json({ error: 'Database error', message: err.message });
       }

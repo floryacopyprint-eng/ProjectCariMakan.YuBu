@@ -7,9 +7,10 @@ import {
   createReview,
   addFavorite,
   removeFavorite,
-  getFavoritesByUser,
-  createOrder
+  getFavoritesByUser
 } from '../services/api';
+import { useCart } from '../context/CartContext.jsx';
+import { useAuth } from '../context/AuthContext';
 import './FoodDetail.css';
 
 const FoodDetail = () => {
@@ -22,11 +23,13 @@ const FoodDetail = () => {
   const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
   const [quantity, setQuantity] = useState(1);
-  const userId = 1; // Hardcoded untuk demo
+  const { addToCart, toast, setToast } = useCart();
+  const { user } = useAuth();
+  const userId = user?.user_id || user?.id || null;
 
   useEffect(() => {
     loadData();
-  }, [id]);
+  }, [id, userId]);
 
   const loadData = async () => {
     try {
@@ -37,8 +40,14 @@ const FoodDetail = () => {
       const reviewsResponse = await getReviewsByFood(id);
       setReviews(reviewsResponse.data.data);
 
+      if (!userId) {
+        setIsFavorite(false);
+        return;
+      }
+
       const favResponse = await getFavoritesByUser(userId);
-      const isFav = favResponse.data.data.some(fav => fav.id === parseInt(id));
+      const favoriteItems = Array.isArray(favResponse?.data?.data) ? favResponse.data.data : [];
+      const isFav = favoriteItems.some((fav) => String(fav.id) === String(id));
       setIsFavorite(isFav);
     } catch (error) {
       console.error('Error loading food detail:', error);
@@ -49,6 +58,12 @@ const FoodDetail = () => {
   };
 
   const handleFavoriteToggle = async () => {
+    if (!userId) {
+      alert('Silakan login terlebih dahulu untuk menyimpan favorit.');
+      navigate('/login');
+      return;
+    }
+
     try {
       if (isFavorite) {
         await removeFavorite(userId, id);
@@ -66,6 +81,12 @@ const FoodDetail = () => {
     e.preventDefault();
     if (!newReview.comment.trim()) {
       alert('Silakan masukkan komentar');
+      return;
+    }
+
+    if (!userId) {
+      alert('Silakan login terlebih dahulu untuk memberi review.');
+      navigate('/login');
       return;
     }
 
@@ -89,24 +110,17 @@ const FoodDetail = () => {
     }
   };
 
-  const handleOrder = async () => {
-    try {
-      await createOrder({
-        user_id: userId,
-        items: [{
-          food_id: parseInt(id),
-          quantity: quantity,
-          price: food.price
-        }],
-        total_price: food.price * quantity,
-        status: 'pending'
-      });
-      alert('Pesanan berhasil dibuat!');
-      navigate('/orders');
-    } catch (error) {
-      console.error('Error creating order:', error);
-      alert('Gagal membuat pesanan');
-    }
+  const handleAddToCart = () => {
+    addToCart({
+      productId: food.id,
+      productName: food.name,
+      price: food.price,
+      quantity,
+      image: food.image,
+      subtotal: food.price * quantity
+    });
+    setToast('Produk berhasil ditambahkan ke keranjang.');
+    navigate('/cart');
   };
 
   if (loading) {
@@ -177,9 +191,10 @@ const FoodDetail = () => {
                   Total: Rp {(food.price * quantity).toLocaleString('id-ID')}
                 </div>
 
-                <button className="order-btn" onClick={handleOrder}>
-                  🛒 Pesan Sekarang
+                <button className="order-btn" onClick={handleAddToCart}>
+                  🛒 Tambah ke Keranjang
                 </button>
+                {toast && <p className="success-message">{toast}</p>}
               </div>
             </div>
           </div>

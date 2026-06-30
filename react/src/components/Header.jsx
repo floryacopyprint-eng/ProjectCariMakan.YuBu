@@ -1,6 +1,7 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import CartBadge from './CartBadge';
 import './Header.css';
 
 const Header = () => {
@@ -19,22 +20,23 @@ const Header = () => {
           <h1 onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>🍽️ CariMakan</h1>
         </div>
         <nav className="nav">
-          <a href="/">Home</a>
-          <a href="/favorites">Favorit</a>
-          <a href="/orders">Pesanan</a>
+          <Link to="/">Home</Link>
+          <Link to="/favorites">Favorit</Link>
+          <Link to="/my-orders">Pesanan</Link>
+          <CartBadge />
 
           {isAuthenticated() ? (
             <div className="auth-menu">
               <span className="user-name">Halo, {user?.nama || user?.username}!</span>
               {user?.role_id === 1 && (
-                <a href="/admin" className="btn-admin">📊 Admin Panel</a>
+                <Link to="/admin" className="btn-admin">📊 Admin Panel</Link>
               )}
               <button onClick={handleLogout} className="btn-logout">Logout</button>
             </div>
           ) : (
             <div className="auth-menu">
-              <a href="/login" className="btn-login">Login</a>
-              <a href="/register" className="btn-register">Daftar</a>
+              <Link to="/login" className="btn-login">Login</Link>
+              <Link to="/register" className="btn-register">Daftar</Link>
             </div>
           )}
         </nav>

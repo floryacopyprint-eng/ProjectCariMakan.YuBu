@@ -17,12 +17,25 @@ export const AuthProvider = ({ children }) => {
 
   // Initialize auth from localStorage
   useEffect(() => {
-    const savedToken = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
+    try {
+      const savedToken = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
 
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+      if (savedToken && savedUser) {
+        const parsedUser = JSON.parse(savedUser);
+
+        if (parsedUser && typeof parsedUser === 'object') {
+          setToken(savedToken);
+          setUser(parsedUser);
+        } else {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
+      }
+    } catch (error) {
+      console.error('Error loading auth state:', error);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
     }
 
     setLoading(false);

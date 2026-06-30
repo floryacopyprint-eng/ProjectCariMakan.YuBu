@@ -72,6 +72,15 @@ export const adminGetUsers = async () => {
   }
 };
 
+export const adminUpdateUserProfile = async (userId, profileData) => {
+  try {
+    const response = await api.put(`/admin/users/${userId}/profile`, profileData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { success: false, message: 'Error updating user profile' };
+  }
+};
+
 export const adminUpdateUserStatus = async (userId, isActive) => {
   try {
     const response = await api.put(`/admin/users/${userId}/status`, { is_active: isActive });
@@ -99,5 +108,14 @@ export const adminGetOrders = async () => {
     return response.data;
   } catch (error) {
     throw error.response?.data || { success: false, message: 'Error fetching orders' };
+  }
+};
+
+export const adminUpdateOrderStatus = async (orderId, status) => {
+  try {
+    const response = await api.put(`/admin/orders/${orderId}/status`, { status });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { success: false, message: 'Error updating order status' };
   }
 };

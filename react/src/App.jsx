@@ -9,6 +9,9 @@ import Home from './pages/Home';
 import FoodDetail from './pages/FoodDetail';
 import Favorites from './pages/Favorites';
 import Orders from './pages/Orders';
+import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
+import MyOrders from './pages/MyOrders';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -16,10 +19,12 @@ import AdminFoods from './pages/admin/AdminFoods';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminOrders from './pages/admin/AdminOrders';
 import './App.css';
+import { CartProvider } from './context/CartContext.jsx';
 
 function App() {
   return (
     <AuthProvider>
+      <CartProvider>
       <BrowserRouter>
         <Header />
         <main className="main-content">
@@ -39,6 +44,23 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Orders />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="/cart" element={<Cart />} />
+            <Route 
+              path="/checkout" 
+              element={
+                <ProtectedRoute>
+                  <Checkout />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/my-orders" 
+              element={
+                <ProtectedRoute>
+                  <MyOrders />
                 </ProtectedRoute>
               } 
             />
@@ -81,6 +103,7 @@ function App() {
         </main>
         <Footer />
       </BrowserRouter>
+      </CartProvider>
     </AuthProvider>
   );
 }

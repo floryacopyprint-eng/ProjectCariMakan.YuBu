@@ -70,6 +70,11 @@ project-kelompok/
 
 ## 🚀 Quick Start
 
+### Jalankan dengan satu klik (Windows)
+- Jalankan file [run-dev.bat](run-dev.bat)
+- Backend akan berjalan di http://localhost:5000
+- Frontend akan berjalan di http://localhost:5173
+
 ### Prerequisites
 - Node.js v16 atau lebih tinggi
 - MySQL 8 dengan database `carimakan_db` sudah dibuat
@@ -171,6 +176,10 @@ Frontend akan berjalan di `http://localhost:5173`
 ✓ CORS configuration
 ✓ Environment variables
 ✓ Structured code organization
+✓ Admin-only profile editing and photo upload
+✓ Checkout with payment method selection
+✓ Admin dashboard statistics
+✓ Docker-ready backend deployment
 
 ## 🔑 Key Implementation Details
 
@@ -188,6 +197,19 @@ Frontend akan berjalan di `http://localhost:5173`
 - **Routes**: Modular routing structure
 - **Error Handling**: Try-catch dan status code management
 - **CORS**: Konfigurasi untuk localhost:5173 dan 3000
+
+## 🚀 Deployment
+
+### Docker
+```bash
+cd express
+docker build -t carimakan-backend .
+docker run -p 5000:5000 carimakan-backend
+```
+
+### Render / PaaS
+- Gunakan file [render.yaml](render.yaml) sebagai konfigurasi deployment
+- Pastikan variabel environment database sudah diset
 
 ## 🎯 Testing
 

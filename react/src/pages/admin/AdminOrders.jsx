@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { adminGetOrders } from '../../services/adminService';
+import { adminGetOrders, adminUpdateOrderStatus } from '../../services/adminService';
 import './AdminOrders.css';
 
 const AdminOrders = () => {
@@ -26,13 +26,22 @@ const AdminOrders = () => {
 
   const getStatusBadge = (status) => {
     const badges = {
-      pending: { label: '⏳ Menunggu', class: 'pending' },
+      pending: { label: '⏳ Menunggu Verifikasi Pembayaran', class: 'pending' },
       diproses: { label: '🔄 Diproses', class: 'processing' },
       dikirim: { label: '📦 Dikirim', class: 'shipped' },
       selesai: { label: '✅ Selesai', class: 'completed' },
       dibatalkan: { label: '❌ Dibatalkan', class: 'cancelled' }
     };
     return badges[status] || { label: status, class: 'pending' };
+  };
+
+  const handleStatusChange = async (orderId, status) => {
+    try {
+      await adminUpdateOrderStatus(orderId, status);
+      loadOrders();
+    } catch (err) {
+      setError(err.message || 'Error updating order status');
+    }
   };
 
   if (loading) {
@@ -86,9 +95,21 @@ const AdminOrders = () => {
                         {order.item_count} item
                       </td>
                       <td>
-                        <span className={`status ${status.class}`}>
-                          {status.label}
-                        </span>
+                        <div className="status-control">
+                          <span className={`status ${status.class}`}>
+                            {status.label}
+                          </span>
+                          <select
+                            defaultValue={order.status}
+                            onChange={(e) => handleStatusChange(order.order_id, e.target.value)}
+                          >
+                            <option value="pending">Menunggu Verifikasi Pembayaran</option>
+                            <option value="diproses">Diproses</option>
+                            <option value="dikirim">Dikirim</option>
+                            <option value="selesai">Selesai</option>
+                            <option value="dibatalkan">Dibatalkan</option>
+                          </select>
+                        </div>
                       </td>
                       <td className="date-cell">
                         {new Date(order.created_at).toLocaleDateString('id-ID', {
@@ -115,7 +136,7 @@ const AdminOrders = () => {
           <div className="stat-card">
             <div className="stat-label">Total Nilai</div>
             <div className="stat-value">
-              Rp {orders.reduce((total, order) => total + order.total_harga, 0).toLocaleString('id-ID')}
+              Rp {orders.reduce((total, order) => total + Number(order.total_harga || 0), 0).toLocaleString('id-ID')}
             </div>
           </div>
           <div className="stat-card">

@@ -26,6 +26,7 @@ router.delete('/foods/:id', adminController.deleteFood);
 // USER MANAGEMENT
 // =====================
 router.get('/users', adminController.getUsers);
+router.put('/users/:id/profile', adminController.updateUserProfile);
 router.put('/users/:id/status', adminController.updateUserStatus);
 router.put('/users/:id/role', adminController.updateUserRole);
 
@@ -33,5 +34,6 @@ router.put('/users/:id/role', adminController.updateUserRole);
 // ORDERS
 // =====================
 router.get('/orders', adminController.getOrders);
+router.put('/orders/:id/status', adminController.updateOrderStatus);
 
 module.exports = router;

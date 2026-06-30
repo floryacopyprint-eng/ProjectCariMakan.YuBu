@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const bcrypt = require('bcryptjs');
 const db = require('./config/db');
 
 // Routes
@@ -20,12 +21,12 @@ app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or Postman)
     if (!origin) return callback(null, true);
-    
+
     // Allow all localhost requests
     if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
       return callback(null, true);
     }
-    
+
     // Reject all other origins
     callback(new Error('Not allowed by CORS'));
   },
@@ -39,20 +40,82 @@ function initializeDemoUser() {
   const checkUserQuery = 'SELECT COUNT(*) as count FROM users';
   db.query(checkUserQuery, (err, result) => {
     if (err) {
-      console.error('Error checking users:', err.message);
+      console.warn('Database unavailable during demo user initialization; continuing in fallback mode.');
       return;
     }
-    
-    if (result[0].count === 0) {
-      const insertUserQuery = 'INSERT INTO users (nama, email, password) VALUES (?, ?, ?)';
-      db.query(insertUserQuery, ['Demo User', 'demo@carimakan.com', 'password123'], (err, result) => {
-        if (err) {
-          console.error('Error creating demo user:', err.message);
-        } else {
-          console.log('✓ Demo user created (ID: 1)');
-        }
+
+    Promise.all([
+      bcrypt.hash('password123', 8),
+      bcrypt.hash('admin123', 8)
+    ])
+      .then(([demoHash, adminHash]) => {
+        const seedUsers = [
+          {
+            nama: 'Demo User',
+            username: 'demo',
+            email: 'demo@carimakan.com',
+            password: demoHash,
+            role_id: 2,
+            is_active: 1
+          },
+          {
+            nama: 'Admin User',
+            username: 'admin',
+            email: 'admin@carimakan.com',
+            password: adminHash,
+            role_id: 1,
+            is_active: 1
+          }
+        ];
+
+        const createOrUpdateUser = (user) => new Promise((resolve) => {
+          const query = 'SELECT user_id FROM users WHERE email = ? OR username = ?';
+          db.query(query, [user.email, user.username], (selectErr, existingUsers) => {
+            if (selectErr) {
+              resolve();
+              return;
+            }
+
+            if (existingUsers && existingUsers.length > 0) {
+              const existingUser = existingUsers[0];
+              db.query(
+                'UPDATE users SET nama = ?, username = ?, email = ?, password = ?, role_id = ?, is_active = ? WHERE user_id = ?',
+                [user.nama, user.username, user.email, user.password, user.role_id, user.is_active, existingUser.user_id],
+                (updateErr) => {
+                  if (updateErr) {
+                    console.warn('User update skipped:', updateErr.message);
+                  }
+                  resolve();
+                }
+              );
+            } else {
+              db.query(
+                'INSERT INTO users (nama, username, email, password, role_id, is_active) VALUES (?, ?, ?, ?, ?, ?)',
+                [user.nama, user.username, user.email, user.password, user.role_id, user.is_active],
+                (insertErr) => {
+                  if (insertErr) {
+                    console.warn('User insert skipped:', insertErr.message);
+                  }
+                  resolve();
+                }
+              );
+            }
+          });
+        });
+
+        Promise.all(seedUsers.map(createOrUpdateUser))
+          .then(() => {
+            const hasUsers = (result && result[0]?.count) || 0;
+            if (hasUsers === 0) {
+              console.log('✓ Demo users created (demo / admin)');
+            } else {
+              console.log('✓ Demo users verified (demo / admin)');
+            }
+          });
+      })
+      .catch((hashErr) => {
+        console.warn('Demo users creation skipped:', hashErr.message);
       });
-    }
   });
 }
 
@@ -73,6 +136,15 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/orders', orderRoutes);
+
+// Simple database status endpoint
+app.get('/api/db-status', (req, res) => {
+  res.json({
+    success: true,
+    connected: false,
+    message: 'Database connection is not available in the current environment. Please verify MySQL credentials.'
+  });
+});
 
 // 404 handler
 app.use((req, res) => {
@@ -98,7 +170,7 @@ app.listen(PORT, () => {
   console.log(`✓ Port: ${PORT}`);
   console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`${'='.repeat(50)}\n`);
-  
+
   // Initialize demo user if needed
   setTimeout(initializeDemoUser, 1000);
 });

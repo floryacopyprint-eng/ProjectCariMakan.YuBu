@@ -2,18 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Loading from '../components/Loading';
 import { getFavoritesByUser, removeFavorite } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import './Favorites.css';
 
 const Favorites = () => {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
-  const userId = 1; // Hardcoded untuk demo
+  const { user } = useAuth();
+  const userId = user?.user_id || user?.id || null;
 
   useEffect(() => {
     loadFavorites();
-  }, []);
+  }, [userId]);
 
   const loadFavorites = async () => {
+    if (!userId) {
+      setFavorites([]);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const response = await getFavoritesByUser(userId);
@@ -29,7 +37,7 @@ const Favorites = () => {
   const handleRemoveFavorite = async (foodId) => {
     try {
       await removeFavorite(userId, foodId);
-      setFavorites(favorites.filter(fav => fav.id !== foodId));
+      setFavorites((prevFavorites) => prevFavorites.filter((fav) => fav.id !== foodId));
     } catch (error) {
       console.error('Error removing favorite:', error);
       alert('Gagal menghapus favorit');

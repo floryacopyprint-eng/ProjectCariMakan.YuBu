@@ -1,22 +1,34 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
 import FoodCard from '../components/FoodCard';
 import Loading from '../components/Loading';
 import { getFoods, addFavorite, removeFavorite, getFavoritesByUser } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import './Home.css';
 
 const Home = () => {
+  const navigate = useNavigate();
   const [foods, setFoods] = useState([]);
   const [filteredFoods, setFilteredFoods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [favorites, setFavorites] = useState([]);
-  const userId = 1; // Hardcoded untuk demo, seharusnya dari auth
+  const { user } = useAuth();
+  const userId = user?.user_id || user?.id || null;
 
   useEffect(() => {
     loadFoods();
-    loadFavorites();
   }, []);
+
+  useEffect(() => {
+    if (!userId) {
+      setFavorites([]);
+      return;
+    }
+
+    loadFavorites();
+  }, [userId]);
 
   useEffect(() => {
     filterFoods();
@@ -39,9 +51,11 @@ const Home = () => {
   const loadFavorites = async () => {
     try {
       const response = await getFavoritesByUser(userId);
-      setFavorites(response.data.data.map(fav => fav.id));
+      const favoriteItems = Array.isArray(response?.data?.data) ? response.data.data : [];
+      setFavorites(favoriteItems.map(fav => fav.id));
     } catch (error) {
       console.error('Error fetching favorites:', error);
+      setFavorites([]);
     }
   };
 
@@ -68,13 +82,19 @@ const Home = () => {
   };
 
   const handleFavoriteToggle = async (foodId) => {
+    if (!userId) {
+      alert('Silakan login terlebih dahulu untuk menyimpan favorit.');
+      navigate('/login');
+      return;
+    }
+
     try {
       if (favorites.includes(foodId)) {
         await removeFavorite(userId, foodId);
-        setFavorites(favorites.filter(fav => fav !== foodId));
+        setFavorites((prevFavorites) => prevFavorites.filter((fav) => fav !== foodId));
       } else {
         await addFavorite({ user_id: userId, food_id: foodId });
-        setFavorites([...favorites, foodId]);
+        setFavorites((prevFavorites) => [...prevFavorites, foodId]);
       }
     } catch (error) {
       console.error('Error toggling favorite:', error);

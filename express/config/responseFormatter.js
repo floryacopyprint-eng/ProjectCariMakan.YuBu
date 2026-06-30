@@ -99,7 +99,17 @@ exports.formatOrder = (dbOrder) => {
     status: dbOrder.status,
     items: dbOrder.items,
     item_count: dbOrder.item_count,
-    created_at: dbOrder.created_at
+    created_at: dbOrder.created_at,
+    address: dbOrder.alamat_pengiriman || dbOrder.address,
+    alamat_pengiriman: dbOrder.alamat_pengiriman || dbOrder.address,
+    notes: dbOrder.catatan || dbOrder.notes,
+    catatan: dbOrder.catatan || dbOrder.notes,
+    paymentMethod: dbOrder.payment_method || dbOrder.paymentMethod,
+    payment_method: dbOrder.payment_method || dbOrder.paymentMethod,
+    customer: dbOrder.customer || dbOrder.nama_pelanggan,
+    nama_pelanggan: dbOrder.customer || dbOrder.nama_pelanggan,
+    phone: dbOrder.phone || dbOrder.nomor_hp,
+    nomor_hp: dbOrder.phone || dbOrder.nomor_hp
   };
 };
 
