@@ -17,6 +17,10 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : [];
+
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or Postman)
@@ -24,6 +28,11 @@ app.use(cors({
 
     // Allow all localhost requests
     if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+      return callback(null, true);
+    }
+
+    // Allow origins from ALLOWED_ORIGINS env variable (production frontend URLs)
+    if (allowedOrigins.some(allowed => origin === allowed || origin.endsWith('.railway.app') || origin.endsWith('.vercel.app') || origin.endsWith('.netlify.app'))) {
       return callback(null, true);
     }
 
