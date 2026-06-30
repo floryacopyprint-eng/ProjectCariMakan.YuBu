@@ -32,7 +32,12 @@ app.use(cors({
     }
 
     // Allow origins from ALLOWED_ORIGINS env variable (production frontend URLs)
-    if (allowedOrigins.some(allowed => origin === allowed || origin.endsWith('.railway.app') || origin.endsWith('.vercel.app') || origin.endsWith('.netlify.app'))) {
+    if (allowedOrigins.some(allowed => origin === allowed)) {
+      return callback(null, true);
+    }
+
+    // Allow all vercel, railway, netlify deployments
+    if (origin.endsWith('.vercel.app') || origin.endsWith('.railway.app') || origin.endsWith('.netlify.app')) {
       return callback(null, true);
     }
 
