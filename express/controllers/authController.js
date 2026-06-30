@@ -207,12 +207,9 @@ const login = (req, res) => {
       }
 
       const user = results[0];
-      const fallbackUser = getFallbackUser(emailOrUsername, password);
 
-      // Cek password
-      const passwordMatches = fallbackUser
-        ? String(password) === String(fallbackUser.password)
-        : await isPasswordValid(password, user.password);
+      // Cek password dari database
+      const passwordMatches = await isPasswordValid(password, user.password);
 
       if (!passwordMatches) {
         return res.status(401).json({
@@ -229,7 +226,7 @@ const login = (req, res) => {
         });
       }
 
-      return sendAuthSuccess(res, fallbackUser || user);
+      return sendAuthSuccess(res, user);
     }
   );
 };
