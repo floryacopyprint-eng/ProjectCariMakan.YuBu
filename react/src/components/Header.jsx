@@ -18,6 +18,7 @@ const Header = () => {
       <div className="header-container">
         <div className="logo">
           <h1 onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>🍽️ CariMakan</h1>
+          <p>jl. pekalongan barat</p>
         </div>
         <nav className="nav">
           <Link to="/">Home</Link>
