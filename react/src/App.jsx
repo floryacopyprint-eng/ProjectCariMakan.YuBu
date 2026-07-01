@@ -12,6 +12,7 @@ import Orders from './pages/Orders';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import MyOrders from './pages/MyOrders';
+import OrderReceipt from './pages/OrderReceipt';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -63,6 +64,14 @@ function App() {
                   <MyOrders />
                 </ProtectedRoute>
               } 
+            />
+            <Route
+              path="/order-receipt/:id"
+              element={
+                <ProtectedRoute>
+                  <OrderReceipt />
+                </ProtectedRoute>
+              }
             />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

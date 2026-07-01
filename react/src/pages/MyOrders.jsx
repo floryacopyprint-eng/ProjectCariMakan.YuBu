@@ -119,6 +119,23 @@ const MyOrders = () => {
                         )) : hasTextItems ? <li>{safeOrder.items}</li> : <li>Belum ada item</li>}
                       </ul>
                     </div>
+                    <div style={{ marginTop: '12px' }}>
+                      <Link
+                        to={`/order-receipt/${orderId}`}
+                        style={{
+                          display: 'inline-block',
+                          background: '#667eea',
+                          color: 'white',
+                          padding: '8px 18px',
+                          borderRadius: '8px',
+                          textDecoration: 'none',
+                          fontSize: '0.88rem',
+                          fontWeight: '600'
+                        }}
+                      >
+                        🖨️ Cetak Bukti Pembayaran
+                      </Link>
+                    </div>
                   </div>
                 </div>
               );
