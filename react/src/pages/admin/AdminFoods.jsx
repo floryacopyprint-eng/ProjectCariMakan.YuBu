@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { adminGetFoods, adminCreateFood, adminUpdateFood, adminDeleteFood } from '../../services/adminService';
+import { adminGetFoods, adminCreateFood, adminUpdateFood, adminDeleteFood, adminToggleFoodStatus } from '../../services/adminService';
 import './AdminFoods.css';
 
 const AdminFoods = () => {
@@ -15,7 +15,8 @@ const AdminFoods = () => {
     deskripsi: '',
     harga: '',
     gambar: '',
-    asal_daerah: ''
+    asal_daerah: '',
+    alamat_resto: ''
   });
 
   useEffect(() => {
@@ -65,7 +66,8 @@ const AdminFoods = () => {
         deskripsi: '',
         harga: '',
         gambar: '',
-        asal_daerah: ''
+        asal_daerah: '',
+        alamat_resto: ''
       });
       setShowForm(false);
       setEditingId(null);
@@ -82,10 +84,21 @@ const AdminFoods = () => {
       deskripsi: food.deskripsi || '',
       harga: food.harga,
       gambar: food.gambar || '',
-      asal_daerah: food.asal_daerah || ''
+      asal_daerah: food.asal_daerah || '',
+      alamat_resto: food.alamat_resto || ''
     });
     setEditingId(food.food_id);
     setShowForm(true);
+  };
+
+  const handleToggleStatus = async (food) => {
+    try {
+      const result = await adminToggleFoodStatus(food.food_id);
+      alert(result.message || 'Status berhasil diubah');
+      loadFoods();
+    } catch (err) {
+      setError(err.message || 'Error mengubah status makanan');
+    }
   };
 
   const handleDelete = async (foodId) => {
@@ -109,7 +122,8 @@ const AdminFoods = () => {
       deskripsi: '',
       harga: '',
       gambar: '',
-      asal_daerah: ''
+      asal_daerah: '',
+      alamat_resto: ''
     });
   };
 
@@ -213,7 +227,6 @@ const AdminFoods = () => {
                       placeholder="Contoh: Sumatera Barat"
                     />
                   </div>
-
                   <div className="form-group">
                     <label htmlFor="gambar">URL Gambar</label>
                     <input
@@ -225,6 +238,18 @@ const AdminFoods = () => {
                       placeholder="https://..."
                     />
                   </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="alamat_resto">Alamat Restoran</label>
+                  <input
+                    type="text"
+                    id="alamat_resto"
+                    name="alamat_resto"
+                    value={formData.alamat_resto}
+                    onChange={handleInputChange}
+                    placeholder="Contoh: Jl. Sudirman No. 10, Jakarta Pusat"
+                  />
                 </div>
 
                 <div className="modal-footer">
@@ -270,6 +295,13 @@ const AdminFoods = () => {
                       </span>
                     </td>
                     <td className="action-buttons">
+                      <button 
+                        className={`btn-toggle ${food.is_active ? 'btn-deactivate' : 'btn-activate'}`}
+                        onClick={() => handleToggleStatus(food)}
+                        title={food.is_active ? 'Nonaktifkan' : 'Aktifkan'}
+                      >
+                        {food.is_active ? '⏸ Nonaktifkan' : '▶ Aktifkan'}
+                      </button>
                       <button 
                         className="btn-edit"
                         onClick={() => handleEdit(food)}

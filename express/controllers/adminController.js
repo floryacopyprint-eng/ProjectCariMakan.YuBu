@@ -91,44 +91,55 @@ const createFood = (req, res) => {
 // PUT update makanan
 const updateFood = (req, res) => {
   const foodId = req.params.id;
-  const { category_id, nama_makanan, deskripsi, harga, gambar, asal_daerah, is_active } = req.body;
+  const { category_id, nama_makanan, deskripsi, harga, gambar, asal_daerah, alamat_resto, is_active } = req.body;
 
-  db.query(
-    'UPDATE foods SET ? WHERE food_id = ?',
-    [
-      {
-        category_id,
-        nama_makanan,
-        deskripsi,
-        harga,
-        gambar,
-        asal_daerah,
-        is_active
-      },
-      foodId
-    ],
-    (err, result) => {
-      if (err) {
-        return res.status(500).json({
-          success: false,
-          message: 'Error updating food',
-          error: err.message
-        });
+  // Ambil data lama dulu agar is_active tidak hilang saat update
+  db.query('SELECT is_active FROM foods WHERE food_id = ?', [foodId], (selectErr, existing) => {
+    if (selectErr || !existing || existing.length === 0) {
+      return res.status(404).json({ success: false, message: 'Food not found' });
+    }
+
+    const currentIsActive = existing[0].is_active;
+    const newIsActive = is_active !== undefined ? (is_active ? 1 : 0) : currentIsActive;
+
+    db.query(
+      'UPDATE foods SET ? WHERE food_id = ?',
+      [{ category_id, nama_makanan, deskripsi, harga, gambar, asal_daerah, alamat_resto, is_active: newIsActive }, foodId],
+      (err, result) => {
+        if (err) {
+          return res.status(500).json({ success: false, message: 'Error updating food', error: err.message });
+        }
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ success: false, message: 'Food not found' });
+        }
+        return res.status(200).json({ success: true, message: 'Food updated successfully' });
       }
+    );
+  });
+};
 
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'Food not found'
-        });
+// PATCH toggle status aktif/nonaktif makanan
+const toggleFoodStatus = (req, res) => {
+  const foodId = req.params.id;
+
+  db.query('SELECT is_active FROM foods WHERE food_id = ?', [foodId], (err, results) => {
+    if (err || !results || results.length === 0) {
+      return res.status(404).json({ success: false, message: 'Food not found' });
+    }
+
+    const newStatus = results[0].is_active ? 0 : 1;
+
+    db.query('UPDATE foods SET is_active = ? WHERE food_id = ?', [newStatus, foodId], (updateErr) => {
+      if (updateErr) {
+        return res.status(500).json({ success: false, message: 'Error toggling food status' });
       }
-
       return res.status(200).json({
         success: true,
-        message: 'Food updated successfully'
+        message: `Makanan berhasil ${newStatus ? 'diaktifkan' : 'dinonaktifkan'}`,
+        is_active: newStatus
       });
-    }
-  );
+    });
+  });
 };
 
 // DELETE makanan
@@ -486,6 +497,7 @@ module.exports = {
   getFoodById,
   createFood,
   updateFood,
+  toggleFoodStatus,
   deleteFood,
   // Users
   getUsers,

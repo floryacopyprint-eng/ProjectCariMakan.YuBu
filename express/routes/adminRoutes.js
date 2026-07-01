@@ -20,6 +20,7 @@ router.get('/foods', adminController.getFoods);
 router.get('/foods/:id', adminController.getFoodById);
 router.post('/foods', adminController.createFood);
 router.put('/foods/:id', adminController.updateFood);
+router.patch('/foods/:id/toggle-status', adminController.toggleFoodStatus);
 router.delete('/foods/:id', adminController.deleteFood);
 
 // =====================

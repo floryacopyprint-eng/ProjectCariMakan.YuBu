@@ -304,3 +304,31 @@
     max-width: 100%;
   }
 }
+
+.btn-toggle {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.btn-activate {
+  background-color: #27ae60;
+  color: white;
+}
+
+.btn-activate:hover {
+  background-color: #1e8449;
+}
+
+.btn-deactivate {
+  background-color: #e67e22;
+  color: white;
+}
+
+.btn-deactivate:hover {
+  background-color: #ca6f1e;
+}

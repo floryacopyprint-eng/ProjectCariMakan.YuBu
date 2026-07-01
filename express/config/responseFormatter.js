@@ -18,6 +18,8 @@ exports.formatFood = (dbFood) => {
     rating: dbFood.rating,
     origin: dbFood.asal_daerah,
     asal_daerah: dbFood.asal_daerah,
+    alamat_resto: dbFood.alamat_resto,
+    is_active: dbFood.is_active,
     created_at: dbFood.created_at
   };
 };

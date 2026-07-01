@@ -171,6 +171,17 @@ const FoodDetail = () => {
                 <p>{food.description}</p>
               </div>
 
+              {(food.asal_daerah || food.origin || food.alamat_resto) && (
+                <div className="detail-resto-info">
+                  {(food.asal_daerah || food.origin) && (
+                    <p>📍 <strong>Asal Daerah:</strong> {food.asal_daerah || food.origin}</p>
+                  )}
+                  {food.alamat_resto && (
+                    <p>🏠 <strong>Alamat Restoran:</strong> {food.alamat_resto}</p>
+                  )}
+                </div>
+              )}
+
               <div className="order-section">
                 <div className="quantity-selector">
                   <label htmlFor="quantity">Jumlah:</label>

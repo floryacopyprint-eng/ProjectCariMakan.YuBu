@@ -60,6 +60,15 @@ export const adminDeleteFood = async (id) => {
   }
 };
 
+export const adminToggleFoodStatus = async (id) => {
+  try {
+    const response = await api.patch(`/admin/foods/${id}/toggle-status`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { success: false, message: 'Error toggling food status' };
+  }
+};
+
 // =====================
 // USERS
 // =====================
